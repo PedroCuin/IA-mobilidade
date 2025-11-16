@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Diagnóstico de Mobilidade</title>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        background: #2b2b2b;
+        color: white;
+    }
+
+    /* ---------------- MINI CHAT ---------------- */
+
+    #chat-header {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 20px;
+        background: #1f1f1f;
+        border-bottom: 2px solid #444;
+    }
+
+    #chat-avatar {
+        width: 55px;
+        height: 55px;
+        background: #00aaff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        font-weight: bold;
+        color: white;
+        box-shadow: 0 0 10px rgba(0,170,255,0.7);
+    }
+
+    #chat-title {
+        font-size: 20px;
+        font-weight: bold;
+    }
+
+    /* ---------------- CONTAINER ---------------- */
+
+    #container {
+        background: #3d3d3d;
+        padding: 25px;
+        border-radius: 12px;
+        max-width: 650px;
+        margin: 35px auto;
+        box-shadow: 0 0 20px rgba(0,0,0,0.4);
+    }
+
+    input {
+        padding: 10px;
+        width: 70%;
+        background: #d3d3d3;
+        border: none;
+        border-radius: 6px;
+        color: black;
+        font-size: 15px;
+    }
+
+    button {
+        padding: 10px 14px;
+        margin-left: 5px;
+        cursor: pointer;
+        border-radius: 6px;
+        border: none;
+        font-weight: bold;
+        transition: 0.2s;
+    }
+
+    .btn-principal {
+        background: white;
+        color: black;
+    }
+
+    .btn-principal:hover {
+        background: #e6e6e6;
+    }
+
+    .remover {
+        margin-left: 10px;
+        background: white;
+        color: black;
+        border-radius: 50%;
+        width: 26px;
+        height: 26px;
+        padding: 0;
+        font-weight: bold;
+    }
+
+    ul {
+        padding-left: 20px;
+    }
+
+    li {
+        padding: 6px 0;
+        color: white;
+    }
+
+    /* ---------------- RESULTADO ---------------- */
+
+    #resultado {
+        background: #2a2a2a;
+        padding: 18px;
+        border-radius: 6px;
+        margin-top: 35px;   /* afastado como pediu */
+        min-height: 50px;
+        white-space: pre-wrap;
+        color: white;
+        font-size: 15px;
+    }
+</style>
+
+</head>
+<body>
+
+<!-- MINI CHAT -->
+<div id="chat-header">
+    <div id="chat-avatar">IA</div>
+    <div id="chat-title">Assistente de Mobilidade</div>
+</div>
+
+<div id="container">
+
+    <h2>Diagnóstico de Mobilidade Urbana</h2>
+
+    <input id="problema" placeholder="Digite um problema...">
+    <button class="btn-principal" onclick="adicionar()">Adicionar</button>
+
+    <ul id="lista"></ul>
+
+    <button class="btn-principal" onclick="analisar()">Analisar</button>
+
+    <h3>Resultado:</h3>
+    <div id="resultado"></div>
+
+</div>
+    
+
+<script>
+    // Permitir adicionar com Enter
+    document.getElementById("problema").addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+            event.preventDefault(); // evita quebra de linha
+            adicionar();
+        }
+    });
+let problemas = [];
+
+/* ---------------- ADICIONAR ---------------- */
+function adicionar() {
+    const texto = document.getElementById("problema").value.trim();
+    if (!texto) return;
+
+    problemas.push(texto);
+    atualizarLista();
+
+    document.getElementById("problema").value = "";
+}
+
+/* ---------------- REMOVER ---------------- */
+function remover(index) {
+    problemas.splice(index, 1);
+    atualizarLista();
+}
+
+/* ---------------- LISTA ---------------- */
+function atualizarLista() {
+    const ul = document.getElementById("lista");
+    ul.innerHTML = "";
+
+    problemas.forEach((item, index) => {
+        const li = document.createElement("li");
+        li.textContent = item;
+
+        const btn = document.createElement("button");
+        btn.textContent = "X";
+        btn.className = "remover";
+        btn.onclick = () => remover(index);
+
+        li.appendChild(btn);
+        ul.appendChild(li);
+    });
+}
+
+/* ---------------- TYPING ANIMADO ---------------- */
+/*
+   Digita letra por letra
+   A cada palavra o delay aumenta
+
+   delayLetraBase = 20 ms
+   delayExtraPalavra = soma +30 ms a cada palavra
+*/
+
+/* ---------------- TYPING ANIMADO COM DELAYS RANDÔMICOS ---------------- */
+
+function rand(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+async function escreverTipoChatGPT(texto, elemento) {
+    elemento.innerHTML = "";
+
+    const palavras = texto.split(" ");
+
+    for (let palavra of palavras) {
+
+        for (let letra of palavra) {
+            elemento.innerHTML += letra;
+
+            // Delay totalmente aleatório por letra
+            await new Promise(r => setTimeout(r, rand(10, 30)));
+        }
+
+        elemento.innerHTML += " ";
+
+        // Delay totalmente aleatório por palavra
+        await new Promise(r => setTimeout(r, rand(20, 50)));
+    }
+}
+
+
+/* ---------------- ANÁLISE PYTHON ---------------- */
+async function analisar() {
+    if (problemas.length === 0) {
+        alert("Adicione ao menos um problema");
+        return;
+    }
+
+    const resultadoDiv = document.getElementById("resultado");
+    resultadoDiv.innerHTML = "Analisando...";
+
+    try {
+        const resposta = await window.pywebview.api.analisar(problemas);
+
+        const texto = typeof resposta === "object"
+            ? JSON.stringify(resposta, null, 2)
+            : resposta;
+
+        escreverTipoChatGPT(texto, resultadoDiv);
+
+    } catch (e) {
+        console.error(e);
+        resultadoDiv.innerHTML = "Erro ao chamar IA.";
+    }
+}
+
+document.addEventListener("pywebviewready", () => {
+    console.log("API carregada!");
+});
+</script>
+
+</body>
+</html>
