@@ -242,7 +242,13 @@ async function analisar() {
             ? JSON.stringify(resposta, null, 2)
             : resposta;
 
+        // Se tiver uma imagem, não usar typing — quebra o HTML
+    if (texto.includes("<img")) {
+        resultadoDiv.innerHTML = texto;
+    } else {
         escreverTipoChatGPT(texto, resultadoDiv);
+    }
+
 
     } catch (e) {
         console.error(e);
