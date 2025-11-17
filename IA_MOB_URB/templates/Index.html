@@ -238,23 +238,29 @@ async function analisar() {
     try {
         const resposta = await window.pywebview.api.analisar(problemas);
 
-        const texto = typeof resposta === "object"
-            ? JSON.stringify(resposta, null, 2)
-            : resposta;
+        // Separar texto da imagem
+        let [texto, imagem] = resposta.split("<img");
 
-        // Se tiver uma imagem, não usar typing — quebra o HTML
-    if (texto.includes("<img")) {
-        resultadoDiv.innerHTML = texto;
-    } else {
-        escreverTipoChatGPT(texto, resultadoDiv);
-    }
+        // Se houver imagem, adiciona a tag depois
+        if (imagem) {
+            imagem = "<img" + imagem; // reconstruir a tag
+        }
 
+        await escreverTipoChatGPT(texto, resultadoDiv);
+
+        // Adicionar a imagem depois do texto
+        if (imagem) {
+            const imgDiv = document.createElement("div");
+            imgDiv.innerHTML = imagem;
+            resultadoDiv.appendChild(imgDiv);
+        }
 
     } catch (e) {
         console.error(e);
         resultadoDiv.innerHTML = "Erro ao chamar IA.";
     }
 }
+
 
 document.addEventListener("pywebviewready", () => {
     console.log("API carregada!");
